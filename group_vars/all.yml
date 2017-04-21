@@ -1,0 +1,12 @@
+---
+# Used by squid role
+ squid_port: 3128
+ allowed_ip_address_ranges: ["XXX.XXX.XXX.XXX/32","172.16.0.1"]
+
+# Used by backup role
+ squid_backup_path: /etc/squid
+
+# Used by sec-address role
+ list_of_ip_address: ["45.32.199.81","45.32.193.201"]
+ list_of_netmask_address: ["255.255.254.0","255.255.254.0"]
+ total_number_additional_address: 2

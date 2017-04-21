@@ -1,0 +1,26 @@
+---
+
+- name: Updating System
+  yum:
+    name: "*"
+    state: latest
+
+- name: Installing Latest EPEL Repository
+  yum:
+    name: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
+    state: present
+
+- name: Installing | Squid | httpd tools
+  yum:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - squid
+    - httpd-tools
+    - python-pip
+    - net-tools
+
+- name: Installing Passlib | library
+  pip:
+    name: passlib
+    state: latest

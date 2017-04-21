@@ -1,0 +1,21 @@
+---
+
+- name: Adding Secondary IP Addresses
+  blockinfile:
+    dest: "/etc/sysconfig/network-scripts/ifcfg-eth0:{{ item }}"
+    state: present
+    create: true
+    block: |
+      DEVICE=eth0:{{ item }}
+      BOOTPROTO=static
+      IPADDR={{ list_of_ip_address[item | int - 1] }}
+      NETMASK={{ list_of_netmask_address[item | int - 1] }}
+      ONBOOT=yes
+  with_sequence: start=1 end="{{ total_number_additional_address }}" stride=1
+
+- name: Restarting Network
+  service:
+    name: network
+    state: restarted
+
+- include: squid-config.yml

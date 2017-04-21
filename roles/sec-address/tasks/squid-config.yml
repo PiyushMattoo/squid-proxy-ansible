@@ -1,0 +1,62 @@
+---
+
+- name: Removing Squid Config file
+  file:
+    dest: /etc/squid/squid.conf
+    state: absent
+
+- name: Creating New Squid File from Backup File
+  shell: "grep -ve ^# -ve ^$ /etc/squid/squid.conf.default > /etc/squid/squid.conf"
+  args:
+    creates: /etc/squid/squid.conf
+
+- name: Allowing only User with Authentication
+  lineinfile:
+    dest: /etc/squid/squid.conf
+    regexp: "{{ item }}"
+    state: absent
+  with_items:
+    - "http_access deny all"
+    - "acl localnet src 10.0.0.0/8"
+    - "acl localnet src 172.16.0.0/12"
+    - "acl localnet src 192.168.0.0/16"
+    - "acl localnet src fc00::/7"
+    - "acl localnet src fe80::/10"
+    - "http_access allow localnet"
+  notify:
+    - restart squid
+
+- name: Getting IP Addresses List from Server
+  shell: "ip a | grep global | awk '{print $2}' | awk -F '/' '{print $1}'"
+  register: ip_address_list
+
+- name: Adding additional IPv4 Addresses to Squid Configurations
+  blockinfile:
+    dest: /etc/squid/squid.conf
+    state: present
+    marker: "#Proxy Additional Addresses Configurations"
+    block: |
+      {% set ip_count = 1 %}
+      {% for ip in ip_address_list.stdout_lines %}
+
+      http_port             {{ squid_port }}           name=port{{ ip_count }}
+      acl                   proxy{{ ip_count }}        myportname              port{{ ip_count }}
+      tcp_outgoing_address  {{ ip }}                   proxy{{ ip_count }}
+
+      {% set squid_port = squid_port + 1 %}
+      {% set ip_count = ip_count + 1 %}
+      {% endfor %}
+  notify:
+    - restart squid
+
+- name: Allowing Your Public IP Addresses
+  blockinfile:
+    dest: /etc/squid/squid.conf
+    state: present
+    marker: "#Allowed Public IP addres from Squid Server"
+    block: |
+      {% for ip in allowed_ip_address_ranges %}
+      acl mypublicaddress src {{ ip }}
+      {% endfor %}
+
+      http_access deny all !mypublicaddress

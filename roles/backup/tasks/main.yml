@@ -1,0 +1,10 @@
+---
+
+- name: Creating Backup | Squid Config | file
+  copy:
+    src: /etc/squid/squid.conf
+    dest: "{{ squid_backup_path }}/squid-backup-{{ ansible_date_time.date }}.conf"
+    owner: root
+    group: root
+    mode: 0400
+    remote_src: true

@@ -1,0 +1,9 @@
+---
+
+- hosts: squid-server
+  gather_facts: false
+  # become_user: root
+  # become_method: su
+  # become: false
+  roles:
+    - sec-address
